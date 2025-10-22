@@ -37,6 +37,7 @@
         .splash-screen.hidden {
             opacity: 0;
             pointer-events: none;
+            display: none;
         }
 
         .splash-logo {
@@ -104,14 +105,17 @@
             height: 95vh;
             display: flex;
             flex-direction: column;
-            opacity: 0;
-            transform: translateY(10px);
-            transition: all 0.5s ease-out;
+            display: none;
         }
 
         .app-container.visible {
-            opacity: 1;
-            transform: translateY(0);
+            display: flex;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         /* Header */
@@ -215,7 +219,7 @@
 
         .note-card-header {
             display: flex;
-            justify-content: between;
+            justify-content: space-between;
             align-items: flex-start;
             margin-bottom: 10px;
         }
@@ -410,6 +414,11 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            display: none;
+        }
+
+        .fab.visible {
+            display: flex;
         }
 
         .fab:hover {
@@ -427,6 +436,10 @@
 
         /* Responsive Design */
         @media (max-width: 768px) {
+            body {
+                padding: 0;
+            }
+            
             .app-container {
                 height: 100vh;
                 border-radius: 0;
@@ -549,7 +562,7 @@
     </div>
 
     <!-- Fixed Floating Action Button -->
-    <button class="fab" onclick="notesApp.createNewNote()">+</button>
+    <button class="fab" id="fabButton" onclick="notesApp.createNewNote()">+</button>
 
     <script>
         class NotesApp {
@@ -566,23 +579,39 @@
             }
 
             showSplashScreen() {
+                console.log('🚀 Starting QuickNotes App...');
+                
                 let progress = 0;
                 const loadingInterval = setInterval(() => {
-                    progress += Math.random() * 20;
+                    progress += 15 + Math.random() * 10;
                     if (progress >= 100) {
                         progress = 100;
                         clearInterval(loadingInterval);
                         
-                        setTimeout(() => {
-                            document.getElementById('splashScreen').classList.add('hidden');
-                            document.getElementById('appContainer').classList.add('visible');
-                            this.showListScreen();
-                            this.renderNotes();
-                        }, 500);
+                        console.log('✅ Splash screen complete, showing main app');
+                        this.hideSplashAndShowApp();
                     }
                     
                     document.getElementById('loadingProgress').style.width = `${progress}%`;
-                }, 200);
+                }, 150);
+            }
+
+            hideSplashAndShowApp() {
+                const splashScreen = document.getElementById('splashScreen');
+                const appContainer = document.getElementById('appContainer');
+                const fabButton = document.getElementById('fabButton');
+                
+                // Hide splash screen
+                splashScreen.classList.add('hidden');
+                
+                // Show main app
+                setTimeout(() => {
+                    appContainer.classList.add('visible');
+                    fabButton.classList.add('visible');
+                    this.showListScreen();
+                    this.renderNotes();
+                    console.log('🎉 Main app successfully loaded!');
+                }, 300);
             }
 
             getSampleNotes() {
@@ -607,19 +636,15 @@
                         content: 'Currently Reading:\n• Atomic Habits\n• The Psychology of Money\n\nTo Read:\n• Deep Work\n• The Almanack of Naval Ravikant\n• Thinking Fast and Slow',
                         createdAt: new Date(Date.now() - 172800000).toISOString(),
                         color: 3
-                    },
-                    {
-                        id: 4,
-                        title: 'Work Projects 💼',
-                        content: 'Active Projects:\n1. Website Redesign\n   - Deadline: 30th Oct\n   - Status: 70% complete\n\n2. Mobile App Development\n   - Deadline: 15th Nov\n   - Status: Planning phase\n\n3. Marketing Campaign\n   - Deadline: 20th Nov\n   - Status: Concept development',
-                        createdAt: new Date(Date.now() - 259200000).toISOString(),
-                        color: 4
                     }
                 ];
             }
 
             bindEvents() {
                 document.getElementById('searchBox').addEventListener('input', (e) => this.searchNotes(e.target.value));
+                
+                // Debug info
+                console.log('🔧 Event listeners bound successfully');
             }
 
             // Screen Management
@@ -628,16 +653,19 @@
                 document.getElementById('writeScreen').style.display = 'none';
                 this.currentScreen = 'list';
                 this.renderNotes();
+                console.log('📱 Showing list screen');
             }
 
             showWriteScreen() {
                 document.getElementById('listScreen').style.display = 'none';
                 document.getElementById('writeScreen').style.display = 'flex';
                 this.currentScreen = 'write';
+                console.log('📝 Showing write screen');
             }
 
             // Note Operations
             createNewNote() {
+                console.log('➕ Creating new note');
                 this.currentNoteId = null;
                 document.getElementById('editorTitle').textContent = 'New Note';
                 document.getElementById('noteTitle').value = '';
@@ -645,21 +673,4 @@
                 this.showWriteScreen();
                 
                 setTimeout(() => {
-                    document.getElementById('noteTitle').focus();
-                }, 100);
-            }
-
-            editNote(noteId) {
-                const note = this.notes.find(n => n.id === noteId);
-                if (note) {
-                    this.currentNoteId = noteId;
-                    document.getElementById('editorTitle').textContent = 'Edit Note';
-                    document.getElementById('noteTitle').value = note.title;
-                    document.getElementById('noteContent').value = note.content;
-                    this.showWriteScreen();
-                }
-            }
-
-            saveNote() {
-                const title = document.getElementById('noteTitle').value.trim();
-      
+                    document.getElementById('noteT
