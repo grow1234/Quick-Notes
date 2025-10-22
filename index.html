@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickNotes - Your Notes App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 1000px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .app-header {
+            background: #2c3e50;
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .app-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .app-content {
+            display: flex;
+            min-height: 600px;
+        }
+
+        .sidebar {
+            width: 350px;
+            background: #34495e;
+            color: white;
+            padding: 20px;
+            border-right: 3px solid #2c3e50;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 25px;
+            background: #2c3e50;
+            color: white;
+            font-size: 1rem;
+            margin-bottom: 20px;
+        }
+
+        .search-box::placeholder {
+            color: #bdc3c7;
+        }
+
+        .btn {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: bold;
+            transition: all 0.3s;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #219a52;
+            transform: translateY(-2px);
+        }
+
+        .notes-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .note-item {
+            background: #2c3e50;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 4px solid #3498db;
+        }
+
+        .note-item:hover {
+            background: #3498db;
+            transform: translateX(5px);
+        }
+
+        .note-item.active {
+            background: #2980b9;
+            border-left-color: #e74c3c;
+        }
+
+        .note-item h3 {
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        .note-item p {
+            color: #ecf0f1;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .note-item small {
+            color: #bdc3c7;
+            font-size: 0.8rem;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .note-title {
+            width: 100%;
+            padding: 20px;
+            font-size: 2rem;
+            font-weight: bold;
+            border: none;
+            border-bottom: 3px solid #ecf0f1;
+            margin-bottom: 20px;
+            outline: none;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .note-content {
+            width: 100%;
+            flex: 1;
+            padding: 20px;
+            border: none;
+            resize: none;
+            outline: none;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+            flex: 1;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #7f8c8d;
+            padding: 40px;
+        }
+
+        .empty-state h2 {
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .app-content {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 3px solid #2c3e50;
+            }
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="app-header">
+            <h1>📝 QuickNotes</h1>
+            <p style="color: #bdc3c7; font-size: 1.2rem;">Your Personal Notes App - Successfully Deployed! 🎉</p>
+        </div>
+        
+        <div class="app-content">
+            <div class="sidebar">
+                <input type="text" class="search-box" placeholder="🔍 Search notes..." id="searchBox">
+                <button class="btn btn-success" id="newNoteBtn">+ Create New Note</button>
+                
+                <div class="notes-list" id="notesList">
+                    <div class="empty-state">
+                        <h3>No Notes Yet</h3>
+                        <p>Create your first note to get started!</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="main-content">
+                <input type="text" class="note-title" placeholder="Note Title" id="noteTitle">
+                <textarea class="note-content" placeholder="Start typing your note here... You can add lists, ideas, reminders, or anything you want to remember!" id="noteContent"></textarea>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-danger" id="deleteBtn">🗑️ Delete Note</button>
+                    <button class="btn btn-primary" id="saveBtn">💾 Save Note</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class NotesApp {
+            constructor() {
+                this.notes = JSON.parse(localStorage.getItem('quicknotes')) || this.getSampleNotes();
+                this.currentNoteId = null;
+                this.init();
+            }
+
+            getSampleNotes() {
+                return [
+                    {
+                        id: 1,
+                        title: 'Welcome to QuickNotes!',
+                        content: 'This is your first note. You can edit it, delete it, or create new ones!\n\nFeatures:\n• Create unlimited notes\n• Auto-save functionality\n• Search notes\n• Mobile responsive\n• Offline support',
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: 2,
+                        title: 'Shopping List',
+                        content: 'Groceries to buy:\n- Milk\n- Eggs\n- Bread\n- Fruits\n- Vegetables',
+                        createdAt: new Date(Date.now() - 86400000).toISOString()
+                    }
+                ];
+            }
+
+            init() {
+                this.bindEvents();
+                this.renderNotes();
+                this.showSuccessMessage();
+            }
+
+            showSuccessMessage() {
+                console.log('🚀 QuickNotes App Successfully Loaded!');
+                console.log('📱 App is now live at: https://grow1234.github.io/Quick-Notes/');
+            }
+
+            bindEvents() {
+                document.getElementById('newNoteBtn').addEventListener('click', () => this.createNote());
+                document.getElementById('saveBtn').addEventListener('click', () => this.saveNote());
+                document.getElementById('deleteBtn').addEventListener('click', () => this.deleteNote());
+                document.getElementById('searchBox').addEventListener('input', (e) => this.searchNotes(e.target.value));
+                
+                // Auto-save
+                document.getElementById('noteTitle').addEventListener('input', () => this.autoSave());
+                document.getElementById('noteContent').addEventListener('input', () => this.autoSave());
+            }
+
+            createNote() {
+                const newNote = {
+                    id: Date.now(),
+                    title: 'New Note',
+                    content: '',
+                    createdAt: new Date().toISOString()
+                };
+                
+                this.notes.unshift(newNote);
+                this.saveToStorage();
+                this.renderNotes();
+                this.selectNote(newNote.id);
+                
+                // Focus on title
+                setTimeout(() => {
+                    document.getElementById('noteTitle').focus();
+                    document.getElementById('noteTitle').select();
+                }, 100);
+            }
+
+            selectNote(noteId) {
+                this.currentNoteId = noteId;
+                const note = this.notes.find(n => n.id === noteId);
+                
+                if (note) {
+                    document.getElementById('noteTitle').value = note.title;
+                    document.getElementById('noteContent').value = note.content;
+                }
+                
+                this.renderNotes();
+            }
+
+            saveNote() {
+                if (!this.currentNoteId) {
+                    alert('Please select a note first or create a new one!');
+                    return;
+                }
+
+                const noteIndex = this.notes.findIndex(n => n.id === this.currentNoteId);
+                if (noteIndex !== -1) {
+                    this.notes[noteIndex].title = document.getElementById('noteTitle').value || 'Untitled Note';
+                    this.notes[noteIndex].content = document.getElementById('noteContent').value;
+                    this.saveToStorage();
+                    this.renderNotes();
+                    
+                    this.showNotification('Note saved successfully! 💾');
+                }
+            }
+
+            autoSave() {
+                clearTimeout(this.autoSaveTimeout);
+                this.autoSaveTimeout = setTimeout(() => {
+                    if (this.currentNoteId) {
+                        this.saveNote();
+                    }
+                }, 1000);
+            }
+
+            deleteNote() {
+                if (!this.currentNoteId) {
+                    alert('Please select a note to delete!');
+                    return;
+                }
+
+                if (confirm('Are you sure you want to delete this note? This action cannot be undone.')) {
+                    this.notes = this.notes.filter(n => n.id !== this.currentNoteId);
+                    this.currentNoteId = null;
+                    this.saveToStorage();
+                    this.renderNotes();
+                    
+                    // Clear editor
+                    document.getElementById('noteTitle').value = '';
+                    document.getElementById('noteContent').value = '';
+                    
+                    this.showNotification('Note deleted successfully! 🗑️');
+                }
+            }
+
+            searchNotes(query) {
+                const filteredNotes = query.trim() === '' 
+                    ? this.notes 
+                    : this.notes.filter(note => 
+                        note.title.toLowerCase().includes(query.toLowerCase()) || 
+                        note.content.toLowerCase().includes(query.toLowerCase())
+                    );
+                
+                this.renderNotes(filteredNotes);
+            }
+
+            renderNotes(notesToRender = null) {
+                const notes = notesToRender || this.notes;
+                const notesList = document.getElementById('notesList');
+                
+                if (notes.length === 0) {
+                    notesList.innerHTML = '<div class="empty-state"><h3>No notes found</h3><p>Try changing your search or create a new note</p></div>';
+                    return;
+                }
+
+                notesList.innerHTML = notes.map(note => `
+                    <div class="note-item ${note.id === this.currentNoteId ? 'active' : ''}" 
+                         onclick="notesApp.selectNote(${note.id})">
+                        <h3>${this.escapeHtml(note.title) || 'Untitled Note'}</h3>
+                        <p>${this.escapeHtml(note.content.substring(0, 80))}${note.content.length > 80 ? '...' : ''}</p>
+                        <small>${new Date(note.createdAt).toLocaleDateString('en-IN', { 
+                            day: 'numeric', 
+                            month: 'short', 
+                            year: 'numeric' 
+                        })}</small>
+                    </div>
+                `).join('');
+            }
+
+            showNotification(message) {
+                // Create notification element
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: #27ae60;
+                    color: white;
+                    padding: 15px 25px;
+                    border-radius: 8px;
+                    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                    z-index: 1000;
+                    font-weight: bold;
+                `;
+                notification.textContent = message;
+                document.body.appendChild(notification);
+                
+                // Remove after 3 seconds
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 3000);
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            saveToStorage() {
+                localStorage.setItem('quicknotes', JSON.stringify(this.notes));
+            }
+        }
+
+        // Initialize the app
+        const notesApp = new NotesApp();
+        
+        // Log success
+        window.addEventListener('load', () => {
+            console.log('🎉 QuickNotes App Successfully Deployed!');
+            console.log('🌐 Live URL: https://grow1234.github.io/Quick-Notes/');
+        });
+    </script>
+</body>
+</html>
