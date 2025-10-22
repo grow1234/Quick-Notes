@@ -1,7 +1,7 @@
 const CACHE_NAME = 'quicknotes-v1';
 const urlsToCache = [
-  '/',
-  '/index.html'
+  '/Quick-Notes/',
+  '/Quick-Notes/index.html'
 ];
 
 self.addEventListener('install', function(event) {
@@ -21,7 +21,6 @@ self.addEventListener('fetch', function(event) {
           return response;
         }
         return fetch(event.request);
-      }
-    )
+      })
   );
 });
