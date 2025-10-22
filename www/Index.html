@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickNotes - Your Personal Notes App</title>
+    <meta name="description" content="A beautiful notes app to organize your thoughts">
+    <meta name="theme-color" content="#3498db">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            overflow: hidden;
+            height: 100vh;
+            height: 100dvh; /* Dynamic viewport height for mobile */
+        }
+
+        /* Splash Screen Styles */
+        .splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+        }
+
+        .splash-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .logo {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .logo-circle {
+            width: 100px;
+            height: 100px;
+            background-color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .logo-icon {
+            font-size: 40px;
+            color: #3498db;
+        }
+
+        .app-title {
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .app-subtitle {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .loading-bar {
+            width: 200px;
+            height: 4px;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .loading-progress {
+            height: 100%;
+            width: 0%;
+            background-color: white;
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        .loading-text {
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 15px;
+            font-size: 0.9rem;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        /* App Container Styles */
+        .app-container {
+            display: flex;
+            height: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            background-color: white;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+        }
+
+        .app-container.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Mobile Header */
+        .mobile-header {
+            display: none;
+            padding: 15px;
+            background-color: #2c3e50;
+            color: white;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .mobile-menu-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .mobile-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 300px;
+            background-color: #2c3e50;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .app-header {
+            padding: 20px;
+            background-color: #1a2530;
+            text-align: center;
+        }
+
+        .app-header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .search-container {
+            padding: 15px;
+            border-bottom: 1px solid #34495e;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 10px 15px;
+            border-radius: 20px;
+            border: none;
+            background-color: #34495e;
+            color: white;
+            outline: none;
+        }
+
+        .search-box::placeholder {
+            color: #95a5a6;
+        }
+
+        .notes-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 0;
+        }
+
+        .note-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #34495e;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .note-item:hover {
+            background-color: #34495e;
+        }
+
+        .note-item.active {
+            background-color: #3498db;
+        }
+
+        .note-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .note-preview {
+            font-size: 0.85rem;
+            color: #bdc3c7;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .note-date {
+            font-size: 0.75rem;
+            color: #95a5a6;
+            margin-top: 5px;
+        }
+
+        .add-note-btn {
+            margin: 15px;
+            padding: 12px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+
+        .add-note-btn:hover {
+            background-color: #2980b9;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .note-editor {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .note-title-input {
+            font-size: 1.5rem;
+            font-weight: 600;
+            border: none;
+            padding: 10px 0;
+            margin-bottom: 10px;
+            outline: none;
+            border-bottom: 1px solid #eee;
+        }
+
+        .note-content-textarea {
+            flex: 1;
+            border: none;
+            outline: none;
+            resize: none;
+            font-size: 1rem;
+            line-height: 1.6;
+            padding: 10px 0;
+        }
+
+        .note-actions {
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid #eee;
+            background-color: #f8f9fa;
+        }
+
+        .action-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .delete-btn {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background-color: #c0392b;
+        }
+
+        .save-btn {
+            background-color: #2ecc71;
+            color: white;
+        }
+
+        .save-btn:hover {
+            background-color: #27ae60;
+        }
+
+        .empty-state {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #7f8c8d;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .empty-state h2 {
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .empty-state p {
+            max-width: 400px;
+            margin-bottom: 20px;
+        }
+
+        /* Install Prompt */
+        .install-prompt {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            display: none;
+            align-items: center;
+            gap: 15px;
+            z-index: 1000;
+            max-width: 90%;
+        }
+
+        .install-text {
+            font-size: 0.9rem;
+        }
+
+        .install-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .close-install {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: #7f8c8d;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+            }
+            
+            .mobile-header {
+                display: flex;
+            }
+            
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100%;
+                width: 100%;
+                z-index: 90;
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                width: 100%;
+            }
+            
+            .note-editor {
+                padding: 15px;
+            }
+            
+            .note-title-input {
+                font-size: 1.3rem;
+            }
+            
+            .note-actions {
+                padding: 12px 15px;
+            }
+            
+            .app-title {
+                font-size: 2rem;
+            }
+            
+            .app-subtitle {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .note-item {
+                padding: 12px 15px;
+            }
+            
+            .add-note-btn {
+                margin: 10px;
+                padding: 10px;
+            }
+            
+            .action-btn {
+                padding: 8px 12px;
+                font-size: 0.9rem;
+            }
+            
+            .install-prompt {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+
+        /* PWA Styles - App-like feel */
+        @media (display-mode: standalone) {
+            body {
+                -webkit-app-region: no-drag;
+            }
+            
+            .mobile-header {
+                padding-top: max(15px, env(safe-area-inset-top));
+            }
+        }
+
+        /* Safe area insets for notch phones */
+        @supports(padding: max(0px)) {
+            .mobile-header {
+                padding-left: max(15px, env(safe-area-inset-left));
+                padding-right: max(15px, env(safe-area-inset-right));
+            }
+            
+            .note-editor, .note-actions {
+                padding-left: max(20px, env(safe-area-inset-left));
+                padding-right: max(20px, env(safe-area-inset-right));
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Splash Screen -->
+    <div class="splash-screen" id="splashScreen">
+        <div class="logo">
+            <div class="logo-circle">
+                <div class="logo-icon">📝</div>
+            </div>
+        </div>
+        <h1 class="app-title">QuickNotes</h1>
+        <p class="app-subtitle">Your ideas, organized beautifully</p>
+        <div class="loading-bar">
+            <div class="loading-progress" id="loadingProgress"></div>
+        </div>
+        <div class="loading-text" id="loadingText">Loading your notes...</div>
+    </div>
+    
+    <!-- Mobile Header -->
+    <div class="mobile-header">
+        <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
+        <div class="mobile-title">QuickNotes</div>
+        <div style="width: 40px;"></div> <!-- Spacer for balance -->
+    </div>
+    
+    <!-- Notes App -->
+    <div class="app-container" id="appContainer">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="app-header">
+                <h1>My Notes</h1>
+            </div>
+            
+            <div class="search-container">
+                <input type="text" class="search-box" placeholder="Search notes...">
+            </div>
+            
+            <div class="notes-list">
+                <!-- Notes will be dynamically added here -->
+            </div>
+            
+            <button class="add-note-btn">+ New Note</button>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="empty-state">
+                <h2>No Note Selected</h2>
+                <p>Select a note from the sidebar or create a new one to start editing.</p>
+            </div>
+            
+            <div class="note-editor" style="display: none;">
+                <input type="text" class="note-title-input" placeholder="Note Title">
+                <textarea class="note-content-textarea" placeholder="Start typing your note here..."></textarea>
+            </div>
+            
+            <div class="note-actions" style="display: none;">
+                <button class="action-btn delete-btn">Delete Note</button>
+                <button class="action-btn save-btn">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Install Prompt -->
+    <div class="install-prompt" id="installPrompt">
+        <div class="install-text">Install QuickNotes for a better experience?</div>
+        <button class="install-btn" id="installBtn">Install</button>
+        <button class="close-install" id="closeInstall">×</button>
+    </div>
+
+    <script>
+        // Service Worker Registration for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch(registrationError => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+
+        // DOM Elements
+        const splashScreen = document.getElementById('splashScreen');
+        const appContainer = document.getElementById('appContainer');
+        const loadingProgress = document.getElementById('loadingProgress');
+        const loadingText = document.getElementById('loadingText');
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const sidebar = document.getElementById('sidebar');
+        const notesList = document.querySelector('.notes-list');
+        const noteEditor = document.querySelector('.note-editor');
+        const noteActions = document.querySelector('.note-actions');
+        const emptyState = document.querySelector('.empty-state');
+        const titleInput = document.querySelector('.note-title-input');
+        const contentTextarea = document.querySelector('.note-content-textarea');
+        const addNoteBtn = document.querySelector('.add-note-btn');
+        const saveBtn = document.querySelector('.save-btn');
+        const deleteBtn = document.querySelector('.delete-btn');
+        const searchBox = document.querySelector('.search-box');
+        const installPrompt = document.getElementById('installPrompt');
+        const installBtn = document.getElementById('installBtn');
+        const closeInstall = document.getElementById('closeInstall');
+
+        // Sample notes data
+        let notes = JSON.parse(localStorage.getItem('notes')) || [
+            {
+                id: 1,
+                title: 'Welcome to QuickNotes',
+                content: 'This is a sample note. You can edit it or create a new one.',
+                date: new Date().toISOString().split('T')[0]
+            },
+            {
+                id: 2,
+                title: 'Shopping List',
+                content: '- Milk\n- Eggs\n- Bread\n- Fruits',
+                date: new Date(Date.now() - 86400000).toISOString().split('T')[0]
+            },
+            {
+                id: 3,
+                title: 'Meeting Notes',
+                content: 'Discussed project timeline and deliverables for Q2.',
+                date: new Date(Date.now() - 172800000).toISOString().split('T')[0]
+            }
+        ];
+        
+        let currentNoteId = null;
+        let deferredPrompt;
+
+        // Initialize the app with splash screen
+        function init() {
+            // Simulate loading process
+            let progress = 0;
+            const loadingInterval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(loadingInterval);
+                    
+                    // Update loading text
+                    loadingText.textContent = 'Ready!';
+                    
+                    // Show app after a short delay
+                    setTimeout(() => {
+                        splashScreen.classList.add('hidden');
+                        appContainer.classList.add('visible');
+                        
+                        // Initialize app functionality
+                        initApp();
+                    }, 500);
+                }
+                
+                loadingProgress.style.width = `${progress}%`;
+                
+                // Update loading text based on progress
+                if (progress < 30) {
+                    loadingText.textContent = 'Loading your notes...';
+                } else if (progress < 70) {
+                    loadingText.textContent = 'Almost there...';
+                }
+            }, 300);
+        }
+        
+        // Initialize app functionality after splash screen
+        function initApp() {
+            renderNotesList();
+            updateLocalStorage();
+            
+            // Event listeners
+            addNoteBtn.addEventListener('click', createNewNote);
+            saveBtn.addEventListener('click', saveNote);
+            deleteBtn.addEventListener('click', deleteNote);
+            searchBox.addEventListener('input', filterNotes);
+            mobileMenuBtn.addEventListener('click', toggleSidebar);
+            
+            // Auto-save when typing
+            titleInput.addEventListener('input', autoSave);
+            contentTextarea.addEventListener('input', autoSave);
+            
+            // Install prompt events
+            installBtn.addEventListener('click', installApp);
+            closeInstall.addEventListener('click', () => {
+                installPrompt.style.display = 'none';
+            });
+            
+            // Close sidebar when clicking on a note on mobile
+            if (window.innerWidth <= 768) {
+                notesList.addEventListener('click', () => {
+                    sidebar.classList.remove('active');
+                });
